@@ -95,28 +95,38 @@
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 \setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+% definitions for citeproc citations
+\NewDocumentCommand\citeproctext{}{}
+\NewDocumentCommand\citeproc{mm}{%
+  \begingroup\def\citeproctext{#2}\cite{#1}\endgroup}
+\makeatletter
+ % allow citations to break across lines
+ \let\@cite@ofmt\@firstofone
+ % avoid brackets around text for \cite:
+ \def\@biblabel#1{}
+ \def\@cite#1#2{{#1\if@tempswa , #2\fi}}
+\makeatother
 \newlength{\cslhangindent}
 \setlength{\cslhangindent}{1.5em}
 \newlength{\csllabelwidth}
 \setlength{\csllabelwidth}{3em}
-\newlength{\cslentryspacingunit} % times entry-spacing
-\setlength{\cslentryspacingunit}{\parskip}
-\newenvironment{CSLReferences}[2] % #1 hanging-ident, #2 entry spacing
- {% don't indent paragraphs
-  \setlength{\parindent}{0pt}
+\newenvironment{CSLReferences}[2] % #1 hanging-indent, #2 entry-spacing
+ {\begin{list}{}{%
+  \setlength{\itemindent}{0pt}
+  \setlength{\leftmargin}{0pt}
+  \setlength{\parsep}{0pt}
   % turn on hanging indent if param 1 is 1
   \ifodd #1
-  \let\oldpar\par
-  \def\par{\hangindent=\cslhangindent\oldpar}
+   \setlength{\leftmargin}{\cslhangindent}
+   \setlength{\itemindent}{-1\cslhangindent}
   \fi
   % set entry spacing
-  \setlength{\parskip}{#2\cslentryspacingunit}
- }%
- {}
+  \setlength{\itemsep}{#2\baselineskip}}}
+ {\end{list}}
 \usepackage{calc}
-\newcommand{\CSLBlock}[1]{#1\hfill\break}
-\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{#1}}
-\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{#1}\break}
+\newcommand{\CSLBlock}[1]{\hfill\break#1\hfill\break}
+\newcommand{\CSLLeftMargin}[1]{\parbox[t]{\csllabelwidth}{\strut#1\strut}}
+\newcommand{\CSLRightInline}[1]{\parbox[t]{\linewidth - \csllabelwidth}{\strut#1\strut}}
 \newcommand{\CSLIndent}[1]{\hspace{\cslhangindent}#1}
 \newcommand{\defi}{\mathop{=}^\Delta}
 \newcommand{\doublesum}[3]{\mathop{\sum\sum}_{1\leq #1<#2\leq #3}}
@@ -135,7 +145,7 @@
 
 \title{Global Minima by Penalized Full-dimensional Scaling}
 \author{Jan de Leeuw}
-\date{First created on May 06, 2019. Last update on June 30, 2023}
+\date{First created on May 06, 2019. Last update on October 09, 2023}
 
 \begin{document}
 \maketitle
@@ -159,8 +169,7 @@ frequently. All suggestions for improvement are welcome. The directory
 has a pdf version, a html version, the bib files, the complete Rmd file
 with the code chunks, and the R source code.
 
-\hypertarget{introduction}{%
-\section{Introduction}\label{introduction}}
+\section{Introduction}\label{introduction}
 
 We start with a reformulation of the (metric, Euclidean, least squares)
 multidimensional scaling (MDS) problem. The main difference with
@@ -234,8 +243,7 @@ as \begin{equation}\label{E:mstress}
 \sigma(C)=1-\mathbf{tr}\ B(C)C+\frac12\mathbf{tr}\ VC.
 \end{equation}
 
-\hypertarget{configuration}{%
-\section{Configuration}\label{configuration}}
+\section{Configuration}\label{configuration}
 
 Suppose \(C=ZZ'\), with \(Z\) and \(n\times p\) matrix of rank \(p\). If
 \(\sigma\) has a local minimum at \(C\) then \((V-B(C))Z=0\) and
@@ -258,8 +266,7 @@ d_{ij}(\tilde C)=d_{ij}(C)+\epsilon\ \frac{\text{tr}\ Z'A_{ij}E}{d_{ij}(C)}+\fra
 &+\frac12\epsilon^2\left[\text{tr}\ VF-\mathop{\sum}_{d_{ij}(C)>0}w_{ij}r_{ij}(C)\left\{d_{ij}^2(F)-\frac{((z_i-z_j)'(e_i-e_j))^2}{d_{ij}^2(C)}\right\}\right]+o(\epsilon^2)
 \end{align*}
 
-\hypertarget{fds}{%
-\section{FDS}\label{fds}}
+\section{FDS}\label{fds}
 
 The definition \(\eqref{E:mstress}\) shows that the CFDS loss function
 is a convex function on the cone of positive semi-definite matrices,
@@ -283,8 +290,7 @@ associated with each pair \((W,\Delta)\), we can also talk about the
 \emph{approximate Gower rank} by ignoring the small eigenvalues of
 \(C\).
 
-\hypertarget{fds-using-smacof}{%
-\section{FDS using SMACOF}\label{fds-using-smacof}}
+\section{FDS using SMACOF}\label{fds-using-smacof}
 
 The usual SMACOF algorithm can be applied to FMDS as well. The
 iterations start with \(Z^{(0)}\) and use the update rule
@@ -367,8 +373,7 @@ dimension. If \(Z\) is a stationary point and \(V-B(Z)\) is positive
 semi-definite then we actually have found the CFDS solution, the Gower
 rank, and the global minimum (De Leeuw (2014)).
 
-\hypertarget{penalizing-dimensions}{%
-\section{Penalizing Dimensions}\label{penalizing-dimensions}}
+\section{Penalizing Dimensions}\label{penalizing-dimensions}
 
 In Shepard (1962a) and Shepard (1962b) a nonmetric multidimensional
 scaling technique is developed which minimizes a loss function over
@@ -419,8 +424,7 @@ version of the exterior penalty result, which implies that
 there is always the possibility of taking the wrong trajectory to a
 local minimum of pMDS.
 
-\hypertarget{local-minima}{%
-\subsection{Local Minima}\label{local-minima}}
+\subsection{Local Minima}\label{local-minima}
 
 The stationary equations of the PFDS problem are solutions to the
 equations \begin{align}
@@ -459,8 +463,7 @@ PFDS to have a local minimum at \([X\mid 0]\), provided we eliminate
 translational and rotational indeterminacy by a suitable
 reparametrization, as in De Leeuw (1993).
 
-\hypertarget{algorithm}{%
-\section{Algorithm}\label{algorithm}}
+\section{Algorithm}\label{algorithm}
 
 The SMACOF algorithm for penalized stress is a small modification of the
 unpenalized FDS algorithm \(\eqref{E:smacof}\). We start our iterations
@@ -478,8 +481,7 @@ then divide the last \(n-p\) columns by \(1+\lambda\).
 
 Code is in the appendix. Let us analyze a number of examples.
 
-\hypertarget{examples}{%
-\section{Examples}\label{examples}}
+\section{Examples}\label{examples}
 
 This section has a number of two-dimensional and a number of
 one-dimensional examples. The one-dimensional examples are of interest,
@@ -524,8 +526,7 @@ u_i=\sum_{j=1}^nw_{ij}\delta_{ij}\ \mathbf{sign}\ (x_i-x_j).
 convergence of penalized FDS. There is no interpretation of the MDS
 results
 
-\hypertarget{chi-squares}{%
-\subsection{Chi Squares}\label{chi-squares}}
+\subsection{Chi Squares}\label{chi-squares}
 
 In this example, of order 10, the \(\delta_{ij}\) are independent draws
 from a chi-square distribution with two degrees of freedom. There is no
@@ -549,8 +550,7 @@ already close to optimal for 2MDS. This is because the Gower rank of the
 dissimilarities is only three (or maybe four, the fourth singular value
 of the FDS solution \(Z\) is very small).
 
-\hypertarget{regular-simplex}{%
-\subsection{Regular Simplex}\label{regular-simplex}}
+\subsection{Regular Simplex}\label{regular-simplex}
 
 The regular simplex has all dissimilarities equal to one. We use an
 example with \(n=10\), for which the global minimum (as far as we know)
@@ -618,8 +618,7 @@ equilateral triangle to the corners of the square, and thus we do find
 the global minimum in this way. It is remarkable that we manage to find
 the square even when we start closer to the triangle with midpoint.
 
-\hypertarget{intelligence}{%
-\subsection{Intelligence}\label{intelligence}}
+\subsection{Intelligence}\label{intelligence}
 
 These are correlations between eight intelligence tests, taken from the
 \texttt{smacof} package. We convert to dissimilarities by taking the
@@ -651,11 +650,10 @@ are short.
 \begin{center}\includegraphics{penalty_files/figure-latex/intelligence-1} \end{center}
 
 The singular values of the FDS solution are 1.78e+00, 1.36e+00,
-5.94e-01, 1.47e-01, 3.29e-03, 1.06e-16, 3.55e-17, 3.09e-17, which shows
+5.94e-01, 1.47e-01, 3.29e-03, 1.16e-16, 4.76e-17, 2.93e-17, which shows
 that the Gower rank is probably five, but approximately two.
 
-\hypertarget{countries}{%
-\subsection{Countries}\label{countries}}
+\subsection{Countries}\label{countries}
 
 This is the \texttt{wish} dataset from the 'smacof` package, with
 similarities between 12 countries. They are converted to dissimilarties
@@ -678,11 +676,10 @@ by subtracting each of them from seven.
 \begin{center}\includegraphics{penalty_files/figure-latex/countries-1} \end{center}
 
 The singular values of the FDS solution are 4.20e+00, 3.71e+00,
-2.67e+00, 1.80e+00, 1.33e+00, 6.64e-01, 5.97e-04, 5.59e-16, 3.59e-16,
-2.25e-16, 1.80e-16, 2.47e-17, and the Gower rank is six or seven.
+2.67e+00, 1.80e+00, 1.33e+00, 6.64e-01, 5.97e-04, 6.60e-16, 3.52e-16,
+1.85e-16, 1.17e-16, 3.89e-17, and the Gower rank is six or seven.
 
-\hypertarget{dutch-political-parties}{%
-\subsection{Dutch Political Parties}\label{dutch-political-parties}}
+\subsection{Dutch Political Parties}\label{dutch-political-parties}
 
 In 1967 one hundred psychology students at Leiden University judged the
 similarity of nine Dutch political parties, using the complete method of
@@ -737,7 +734,7 @@ The results turn out to be basically the same.
 \begin{center}\includegraphics{penalty_files/figure-latex/poldist2-1} \end{center}
 
 The singular values of the FDS solution are 2.95e-01, 2.10e-01,
-1.89e-01, 1.34e-01, 1.16e-01, 1.06e-01, 8.61e-02, 7.06e-02, 7.77e-19,
+1.89e-01, 1.34e-01, 1.16e-01, 1.06e-01, 8.61e-02, 7.06e-02, 8.01e-18,
 and the Gower rank is probably eight. This is mainly because these data,
 being averages, regress to the mean and thus have a substantial additive
 constant. If we repeat the analysis after subtracting .1 from all
@@ -756,11 +753,10 @@ smoother trajectories.
 \begin{center}\includegraphics{penalty_files/figure-latex/poldist3-1} \end{center}
 
 Now the singular values of the FDS solution are 2.05e-01, 1.34e-01,
-1.11e-01, 6.03e-02, 3.11e-02, 3.97e-04, 1.18e-07, 4.55e-12, 1.06e-17,
+1.11e-01, 6.03e-02, 3.11e-02, 3.97e-04, 1.18e-07, 4.55e-12, 9.19e-19,
 and the approximate Gower rank is more like five or six.
 
-\hypertarget{ekman}{%
-\subsection{Ekman}\label{ekman}}
+\subsection{Ekman}\label{ekman}
 
 The next example analyzes dissimilarities between 14 colors, taken from
 Ekman (1954). The original similarities \(s_{ij}\), averaged over 31
@@ -801,8 +797,7 @@ minimum.
 
 \begin{center}\includegraphics{penalty_files/figure-latex/okman-1} \end{center}
 
-\hypertarget{morse-in-two}{%
-\subsection{Morse in Two}\label{morse-in-two}}
+\subsection{Morse in Two}\label{morse-in-two}
 
 Next, we use dissimilarities between 36 Morse code signals (Rothkopf
 (1957)). We used the symmetrized version \texttt{morse} from the
@@ -827,8 +822,7 @@ Next, we use dissimilarities between 36 Morse code signals (Rothkopf
 
 \begin{center}\includegraphics{penalty_files/figure-latex/morse-1} \end{center}
 
-\hypertarget{vegetables}{%
-\subsection{Vegetables}\label{vegetables}}
+\subsection{Vegetables}\label{vegetables}
 
 Our first one-dimensional example uses paired comparisons of 9
 vegetables, originating with Guilford (1954) and taken from the
@@ -850,8 +844,7 @@ This example was previously analyzed in De Leeuw (2005) using
 enumeration of all permutations. He found 14354 isolated local minima,
 and a global minimum equal to the one we computed here.
 
-\hypertarget{plato}{%
-\subsection{Plato}\label{plato}}
+\subsection{Plato}\label{plato}
 
 Mair, Groenen, and De Leeuw (2022) use seriation of the works of Plato,
 from the data collected by Cox and Brandwood (1959), as an example of
@@ -956,8 +949,7 @@ The order is
 ## [7,] "Laws"
 \end{verbatim}
 
-\hypertarget{morse-in-one}{%
-\subsection{Morse in One}\label{morse-in-one}}
+\subsection{Morse in One}\label{morse-in-one}
 
 Now for a more challenging example. The Morse code data have been used
 to try out exact unidimensional MDS techniques, for example by
@@ -1039,8 +1031,7 @@ not analyzed the same data before.
 
 \begin{center}\includegraphics[width=0.75\linewidth]{palubeckis} \end{center}
 
-\hypertarget{discussion}{%
-\section{Discussion}\label{discussion}}
+\section{Discussion}\label{discussion}
 
 There is one surprising (to me, at least) finding from all our examples.
 There is a value, say \(\lambda_+\), such that the penalty \(\tau(Y)\)
@@ -1090,9 +1081,8 @@ the fact that the maximum over \(Z\) of the penalty function
 There is a duality theory associated with these Courant penalty
 functions, which we have not used or explored so far.
 
-\hypertarget{appendix-a-exterior-penalty-methods}{%
 \section{Appendix A: Exterior Penalty
-Methods}\label{appendix-a-exterior-penalty-methods}}
+Methods}\label{appendix-a-exterior-penalty-methods}
 
 Suppose \(\mathcal{X}\subseteq\mathbb{R}^n\) and
 \(f:\mathbb{R}^n\Rightarrow\mathbb{R}\) is continuous. Define \[
@@ -1176,26 +1166,24 @@ that \(f(x_{\star\star})\leq f_\star\), and thus
 \(x_{\star\star}\in\mathcal{X}_\star\) and
 \(f(x_{\star\star})=f_\star\). \(\blacksquare\)
 
-\hypertarget{appendix-b-code}{%
-\section{Appendix B: Code}\label{appendix-b-code}}
+\section{Appendix B: Code}\label{appendix-b-code}
 
-\hypertarget{penalty.r}{%
-\subsection{penalty.R}\label{penalty.r}}
+\subsection{penalty.R}\label{penalty.r}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{smacofLoss }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{ (d, w, delta) \{}
-  \FunctionTok{return}\NormalTok{ (}\FunctionTok{sum}\NormalTok{ (w }\SpecialCharTok{*}\NormalTok{ (delta }\SpecialCharTok{{-}}\NormalTok{ d) }\SpecialCharTok{\^{}} \DecValTok{2}\NormalTok{) }\SpecialCharTok{/} \DecValTok{4}\NormalTok{)}
+\NormalTok{smacofLoss }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(d, w, delta) \{}
+  \FunctionTok{return}\NormalTok{(}\FunctionTok{sum}\NormalTok{(w }\SpecialCharTok{*}\NormalTok{ (delta }\SpecialCharTok{{-}}\NormalTok{ d) }\SpecialCharTok{\^{}} \DecValTok{2}\NormalTok{) }\SpecialCharTok{/} \DecValTok{4}\NormalTok{)}
 \NormalTok{\}}
 
-\NormalTok{smacofBmat }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{ (d, w, delta) \{}
-\NormalTok{  dd }\OtherTok{\textless{}{-}} \FunctionTok{ifelse}\NormalTok{ (d }\SpecialCharTok{==} \DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1} \SpecialCharTok{/}\NormalTok{ d)}
+\NormalTok{smacofBmat }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(d, w, delta) \{}
+\NormalTok{  dd }\OtherTok{\textless{}{-}} \FunctionTok{ifelse}\NormalTok{(d }\SpecialCharTok{==} \DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1} \SpecialCharTok{/}\NormalTok{ d)}
 \NormalTok{  b }\OtherTok{\textless{}{-}} \SpecialCharTok{{-}}\NormalTok{dd }\SpecialCharTok{*}\NormalTok{ w }\SpecialCharTok{*}\NormalTok{ delta}
-  \FunctionTok{diag}\NormalTok{ (b) }\OtherTok{\textless{}{-}} \SpecialCharTok{{-}}\FunctionTok{rowSums}\NormalTok{ (b)}
+  \FunctionTok{diag}\NormalTok{(b) }\OtherTok{\textless{}{-}} \SpecialCharTok{{-}}\FunctionTok{rowSums}\NormalTok{(b)}
   \FunctionTok{return}\NormalTok{(b)}
 \NormalTok{\}}
 
-\NormalTok{smacofVmat }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{ (w) \{}
+\NormalTok{smacofVmat }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(w) \{}
 \NormalTok{  v }\OtherTok{\textless{}{-}} \SpecialCharTok{{-}}\NormalTok{w}
   \FunctionTok{diag}\NormalTok{(v) }\OtherTok{\textless{}{-}} \SpecialCharTok{{-}}\FunctionTok{rowSums}\NormalTok{(v)}
   \FunctionTok{return}\NormalTok{ (v)}
@@ -1206,45 +1194,46 @@ that \(f(x_{\star\star})\leq f_\star\), and thus
 \NormalTok{\}}
 
 \NormalTok{columnCenter }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{ (x) \{}
-  \FunctionTok{return}\NormalTok{ (}\FunctionTok{apply}\NormalTok{ (x, }\DecValTok{2}\NormalTok{, }\ControlFlowTok{function}\NormalTok{ (z) z }\SpecialCharTok{{-}} \FunctionTok{mean}\NormalTok{ (z)))}
+  \FunctionTok{return}\NormalTok{ (}\FunctionTok{apply}\NormalTok{ (x, }\DecValTok{2}\NormalTok{, }\ControlFlowTok{function}\NormalTok{ (z)}
+\NormalTok{    z }\SpecialCharTok{{-}} \FunctionTok{mean}\NormalTok{ (z)))}
 \NormalTok{\}}
 
-\NormalTok{smacofComplement }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{ (y, v) \{}
-  \FunctionTok{return}\NormalTok{ (}\FunctionTok{sum}\NormalTok{ (v }\SpecialCharTok{*} \FunctionTok{tcrossprod}\NormalTok{ (y)) }\SpecialCharTok{/} \DecValTok{4}\NormalTok{)}
+\NormalTok{smacofComplement }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(y, v) \{}
+  \FunctionTok{return}\NormalTok{ (}\FunctionTok{sum}\NormalTok{ (v }\SpecialCharTok{*} \FunctionTok{tcrossprod}\NormalTok{(y)) }\SpecialCharTok{/} \DecValTok{4}\NormalTok{)}
 \NormalTok{\}}
 
 \NormalTok{smacofPenalty }\OtherTok{\textless{}{-}}
-  \ControlFlowTok{function}\NormalTok{ (w,}
-\NormalTok{            delta,}
-            \AttributeTok{p =} \DecValTok{2}\NormalTok{,}
-            \AttributeTok{lbd =} \DecValTok{0}\NormalTok{,}
-            \AttributeTok{zold =} \FunctionTok{columnCenter}\NormalTok{ (}\FunctionTok{diag}\NormalTok{ (}\FunctionTok{nrow}\NormalTok{ (delta))),}
-            \AttributeTok{itmax =} \DecValTok{10000}\NormalTok{,}
-            \AttributeTok{eps =} \FloatTok{1e{-}10}\NormalTok{,}
-            \AttributeTok{verbose =} \ConstantTok{FALSE}\NormalTok{) \{}
+  \ControlFlowTok{function}\NormalTok{(w,}
+\NormalTok{           delta,}
+           \AttributeTok{p =} \DecValTok{2}\NormalTok{,}
+           \AttributeTok{lbd =} \DecValTok{0}\NormalTok{,}
+           \AttributeTok{zold =} \FunctionTok{columnCenter}\NormalTok{(}\FunctionTok{diag}\NormalTok{(}\FunctionTok{nrow}\NormalTok{(delta))),}
+           \AttributeTok{itmax =} \DecValTok{10000}\NormalTok{,}
+           \AttributeTok{eps =} \FloatTok{1e{-}10}\NormalTok{,}
+           \AttributeTok{verbose =} \ConstantTok{FALSE}\NormalTok{) \{}
 \NormalTok{    itel }\OtherTok{\textless{}{-}} \DecValTok{1}
-\NormalTok{    n }\OtherTok{\textless{}{-}} \FunctionTok{nrow}\NormalTok{ (zold)}
-\NormalTok{    vmat }\OtherTok{\textless{}{-}} \FunctionTok{smacofVmat}\NormalTok{ (w)}
-\NormalTok{    vinv }\OtherTok{\textless{}{-}} \FunctionTok{solve}\NormalTok{ (vmat }\SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{/}\NormalTok{ n)) }\SpecialCharTok{{-}}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{/}\NormalTok{ n)}
-\NormalTok{    dold }\OtherTok{\textless{}{-}} \FunctionTok{as.matrix}\NormalTok{ (}\FunctionTok{dist}\NormalTok{ (zold))}
-\NormalTok{    mold }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{ (w }\SpecialCharTok{*}\NormalTok{ delta }\SpecialCharTok{*}\NormalTok{ dold) }\SpecialCharTok{/} \FunctionTok{sum}\NormalTok{ (w }\SpecialCharTok{*}\NormalTok{ dold }\SpecialCharTok{*}\NormalTok{ dold)}
+\NormalTok{    n }\OtherTok{\textless{}{-}} \FunctionTok{nrow}\NormalTok{(zold)}
+\NormalTok{    vmat }\OtherTok{\textless{}{-}} \FunctionTok{smacofVmat}\NormalTok{(w)}
+\NormalTok{    vinv }\OtherTok{\textless{}{-}} \FunctionTok{solve}\NormalTok{(vmat }\SpecialCharTok{+}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{/}\NormalTok{ n)) }\SpecialCharTok{{-}}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{/}\NormalTok{ n)}
+\NormalTok{    dold }\OtherTok{\textless{}{-}} \FunctionTok{as.matrix}\NormalTok{(}\FunctionTok{dist}\NormalTok{(zold))}
+\NormalTok{    mold }\OtherTok{\textless{}{-}} \FunctionTok{sum}\NormalTok{(w }\SpecialCharTok{*}\NormalTok{ delta }\SpecialCharTok{*}\NormalTok{ dold) }\SpecialCharTok{/} \FunctionTok{sum}\NormalTok{(w }\SpecialCharTok{*}\NormalTok{ dold }\SpecialCharTok{*}\NormalTok{ dold)}
 \NormalTok{    zold }\OtherTok{\textless{}{-}}\NormalTok{ zold }\SpecialCharTok{*}\NormalTok{ mold}
 \NormalTok{    dold }\OtherTok{\textless{}{-}}\NormalTok{ dold }\SpecialCharTok{*}\NormalTok{ mold}
-\NormalTok{    yold }\OtherTok{\textless{}{-}}\NormalTok{ zold [, (p }\SpecialCharTok{+} \DecValTok{1}\NormalTok{) }\SpecialCharTok{:}\NormalTok{ n]}
-\NormalTok{    sold }\OtherTok{\textless{}{-}} \FunctionTok{smacofLoss}\NormalTok{ (dold, w, delta)}
-\NormalTok{    bold }\OtherTok{\textless{}{-}} \FunctionTok{smacofBmat}\NormalTok{ (dold, w, delta)}
-\NormalTok{    told }\OtherTok{\textless{}{-}} \FunctionTok{smacofComplement}\NormalTok{ (yold, vmat)}
+\NormalTok{    yold }\OtherTok{\textless{}{-}}\NormalTok{ zold[, (p }\SpecialCharTok{+} \DecValTok{1}\NormalTok{)}\SpecialCharTok{:}\NormalTok{n]}
+\NormalTok{    sold }\OtherTok{\textless{}{-}} \FunctionTok{smacofLoss}\NormalTok{(dold, w, delta)}
+\NormalTok{    bold }\OtherTok{\textless{}{-}} \FunctionTok{smacofBmat}\NormalTok{(dold, w, delta)}
+\NormalTok{    told }\OtherTok{\textless{}{-}} \FunctionTok{smacofComplement}\NormalTok{(yold, vmat)}
 \NormalTok{    uold }\OtherTok{\textless{}{-}}\NormalTok{ sold }\SpecialCharTok{+}\NormalTok{ lbd }\SpecialCharTok{*}\NormalTok{ told}
     \ControlFlowTok{repeat}\NormalTok{ \{}
-\NormalTok{      znew }\OtherTok{\textless{}{-}} \FunctionTok{smacofGuttman}\NormalTok{ (zold, bold, vinv)}
-\NormalTok{      ynew }\OtherTok{\textless{}{-}}\NormalTok{ znew [, (p }\SpecialCharTok{+} \DecValTok{1}\NormalTok{) }\SpecialCharTok{:}\NormalTok{ n] }\SpecialCharTok{/}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{+}\NormalTok{ lbd)}
-\NormalTok{      znew [, (p }\SpecialCharTok{+} \DecValTok{1}\NormalTok{) }\SpecialCharTok{:}\NormalTok{ n] }\OtherTok{\textless{}{-}}\NormalTok{ ynew}
-\NormalTok{      xnew }\OtherTok{\textless{}{-}}\NormalTok{ znew [, }\DecValTok{1}\SpecialCharTok{:}\NormalTok{p]}
-\NormalTok{      dnew }\OtherTok{\textless{}{-}} \FunctionTok{as.matrix}\NormalTok{ (}\FunctionTok{dist}\NormalTok{ (znew))}
-\NormalTok{      bnew }\OtherTok{\textless{}{-}} \FunctionTok{smacofBmat}\NormalTok{ (dnew, w, delta)}
-\NormalTok{      tnew }\OtherTok{\textless{}{-}} \FunctionTok{smacofComplement}\NormalTok{ (ynew, vmat)}
-\NormalTok{      snew }\OtherTok{\textless{}{-}} \FunctionTok{smacofLoss}\NormalTok{ (dnew, w, delta) }
-\NormalTok{      unew }\OtherTok{\textless{}{-}}\NormalTok{ snew }\SpecialCharTok{+}\NormalTok{ lbd }\SpecialCharTok{*}\NormalTok{ tnew }
+\NormalTok{      znew }\OtherTok{\textless{}{-}} \FunctionTok{smacofGuttman}\NormalTok{(zold, bold, vinv)}
+\NormalTok{      ynew }\OtherTok{\textless{}{-}}\NormalTok{ znew[, (p }\SpecialCharTok{+} \DecValTok{1}\NormalTok{)}\SpecialCharTok{:}\NormalTok{n] }\SpecialCharTok{/}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{+}\NormalTok{ lbd)}
+\NormalTok{      znew[, (p }\SpecialCharTok{+} \DecValTok{1}\NormalTok{)}\SpecialCharTok{:}\NormalTok{n] }\OtherTok{\textless{}{-}}\NormalTok{ ynew}
+\NormalTok{      xnew }\OtherTok{\textless{}{-}}\NormalTok{ znew[, }\DecValTok{1}\SpecialCharTok{:}\NormalTok{p]}
+\NormalTok{      dnew }\OtherTok{\textless{}{-}} \FunctionTok{as.matrix}\NormalTok{(}\FunctionTok{dist}\NormalTok{(znew))}
+\NormalTok{      bnew }\OtherTok{\textless{}{-}} \FunctionTok{smacofBmat}\NormalTok{(dnew, w, delta)}
+\NormalTok{      tnew }\OtherTok{\textless{}{-}} \FunctionTok{smacofComplement}\NormalTok{(ynew, vmat)}
+\NormalTok{      snew }\OtherTok{\textless{}{-}} \FunctionTok{smacofLoss}\NormalTok{(dnew, w, delta)}
+\NormalTok{      unew }\OtherTok{\textless{}{-}}\NormalTok{ snew }\SpecialCharTok{+}\NormalTok{ lbd }\SpecialCharTok{*}\NormalTok{ tnew}
       \ControlFlowTok{if}\NormalTok{ (verbose) \{}
         \FunctionTok{cat}\NormalTok{(}
           \StringTok{"itel "}\NormalTok{,}
@@ -1304,9 +1293,9 @@ that \(f(x_{\star\star})\leq f_\star\), and thus
 \NormalTok{      told }\OtherTok{\textless{}{-}}\NormalTok{ tnew}
 \NormalTok{      uold }\OtherTok{\textless{}{-}}\NormalTok{ unew}
 \NormalTok{    \}}
-\NormalTok{    zpri }\OtherTok{\textless{}{-}}\NormalTok{znew }\SpecialCharTok{\%*\%} \FunctionTok{svd}\NormalTok{(znew)}\SpecialCharTok{$}\NormalTok{v}
+\NormalTok{    zpri }\OtherTok{\textless{}{-}}\NormalTok{ znew }\SpecialCharTok{\%*\%} \FunctionTok{svd}\NormalTok{(znew)}\SpecialCharTok{$}\NormalTok{v}
 \NormalTok{    xpri }\OtherTok{\textless{}{-}}\NormalTok{ zpri[, }\DecValTok{1}\SpecialCharTok{:}\NormalTok{p]}
-    \FunctionTok{return}\NormalTok{ (}\FunctionTok{list}\NormalTok{ (}
+    \FunctionTok{return}\NormalTok{(}\FunctionTok{list}\NormalTok{(}
       \AttributeTok{x =}\NormalTok{ xpri,}
       \AttributeTok{z =}\NormalTok{ zpri,}
       \AttributeTok{b =}\NormalTok{ bnew,}
@@ -1319,8 +1308,7 @@ that \(f(x_{\star\star})\leq f_\star\), and thus
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{runpenalty.r}{%
-\subsection{runPenalty.R}\label{runpenalty.r}}
+\subsection{runPenalty.R}\label{runpenalty.r}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1436,8 +1424,7 @@ that \(f(x_{\star\star})\leq f_\star\), and thus
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{matchme.r}{%
-\subsection{matchMe.R}\label{matchme.r}}
+\subsection{matchMe.R}\label{matchme.r}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1482,8 +1469,7 @@ that \(f(x_{\star\star})\leq f_\star\), and thus
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{plotme.r}{%
-\subsection{plotMe.R}\label{plotme.r}}
+\subsection{plotMe.R}\label{plotme.r}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1543,8 +1529,7 @@ that \(f(x_{\star\star})\leq f_\star\), and thus
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{checkuni.r}{%
-\subsection{checkUni.R}\label{checkuni.r}}
+\subsection{checkUni.R}\label{checkuni.r}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1557,126 +1542,128 @@ that \(f(x_{\star\star})\leq f_\star\), and thus
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{references}{%
-\section*{References}\label{references}}
+\section*{References}\label{references}
 \addcontentsline{toc}{section}{References}
 
-\hypertarget{refs}{}
+\phantomsection\label{refs}
 \begin{CSLReferences}{1}{0}
-\leavevmode\vadjust pre{\hypertarget{ref-allgower_george_79}{}}%
+\bibitem[\citeproctext]{ref-allgower_george_79}
 Allgower, E. L., and K. George. 1979. \emph{Introduction to Numerical
 Continuation Methods}. Wiley.
 
-\leavevmode\vadjust pre{\hypertarget{ref-borg_groenen_05}{}}%
+\bibitem[\citeproctext]{ref-borg_groenen_05}
 Borg, I., and P. J. F. Groenen. 2005. \emph{Modern Multidimensional
 Scaling}. Second Edition. Springer.
 
-\leavevmode\vadjust pre{\hypertarget{ref-cox_brandwood_59}{}}%
+\bibitem[\citeproctext]{ref-cox_brandwood_59}
 Cox, D. R., and L. Brandwood. 1959. {``{On a Discriminatory Problem
 Connected with the Works of Plato}.''} \emph{Journal of the Royal
 Statistical Society, Series B} 21: 195--200.
 
-\leavevmode\vadjust pre{\hypertarget{ref-degruijter_67}{}}%
+\bibitem[\citeproctext]{ref-degruijter_67}
 De Gruijter, D. N. M. 1967. {``{The Cognitive Structure of Dutch
 Political Parties in 1966}.''} Report E019-67. Psychological Institute,
 University of Leiden.
 
-\leavevmode\vadjust pre{\hypertarget{ref-deleeuw_C_77}{}}%
+\bibitem[\citeproctext]{ref-deleeuw_C_77}
 De Leeuw, J. 1977. {``Applications of Convex Analysis to
 Multidimensional Scaling.''} In \emph{Recent Developments in
 Statistics}, edited by J. R. Barra, F. Brodeau, G. Romier, and B. Van
 Cutsem, 133--45. Amsterdam, The Netherlands: North Holland Publishing
 Company.
 
-\leavevmode\vadjust pre{\hypertarget{ref-deleeuw_A_84f}{}}%
+\bibitem[\citeproctext]{ref-deleeuw_A_84f}
 ---------. 1984. {``{Differentiability of Kruskal's Stress at a Local
 Minimum}.''} \emph{Psychometrika} 49: 111--13.
 
-\leavevmode\vadjust pre{\hypertarget{ref-deleeuw_R_93c}{}}%
+\bibitem[\citeproctext]{ref-deleeuw_R_93c}
 ---------. 1993. {``Fitting Distances by Least Squares.''} Preprint
 Series 130. Los Angeles, CA: UCLA Department of Statistics.
 \url{https://jansweb.netlify.app/publication/deleeuw-r-93-c/deleeuw-r-93-c.pdf}.
 
-\leavevmode\vadjust pre{\hypertarget{ref-deleeuw_C_05h}{}}%
+\bibitem[\citeproctext]{ref-deleeuw_C_05h}
 ---------. 2005. {``{Unidimensional Scaling}.''} In \emph{The
 Encyclopedia of Statistics in Behavioral Science}, edited by B. S.
 Everitt and D. Howell, 4:2095--97. New York, N.Y.: Wiley.
 
-\leavevmode\vadjust pre{\hypertarget{ref-deleeuw_U_14b}{}}%
+\bibitem[\citeproctext]{ref-deleeuw_U_14b}
 ---------. 2014. {``{Bounding, and Sometimes Finding, the Global Minimum
 in Multidimensional Scaling}.''} UCLA Department of Statistics.
+\url{https://jansweb.netlify.app/publication/deleeuw-u-14-b/deleeuw-u-14-b.pdf}.
 
-\leavevmode\vadjust pre{\hypertarget{ref-deleeuw_E_16k}{}}%
+\bibitem[\citeproctext]{ref-deleeuw_E_16k}
 ---------. 2016. {``Gower Rank.''} 2016.
+\url{https://jansweb.netlify.app/publication/deleeuw-e-16-k/deleeuw-e-16-k.pdf}.
 
-\leavevmode\vadjust pre{\hypertarget{ref-deleeuw_E_17e}{}}%
+\bibitem[\citeproctext]{ref-deleeuw_E_17e}
 ---------. 2017. {``{Shepard Non-metric Multidimensional Scaling}.''}
 2017.
 
-\leavevmode\vadjust pre{\hypertarget{ref-deleeuw_mair_A_09c}{}}%
+\bibitem[\citeproctext]{ref-deleeuw_mair_A_09c}
 De Leeuw, J., and P. Mair. 2009. {``{Multidimensional Scaling Using
 Majorization: SMACOF in R}.''} \emph{Journal of Statistical Software} 31
-(3): 1--30.
+(3): 1--30. \url{https://www.jstatsoft.org/article/view/v031i03}.
 
-\leavevmode\vadjust pre{\hypertarget{ref-dolgopolik_16a}{}}%
+\bibitem[\citeproctext]{ref-dolgopolik_16a}
 Dolgopolik, M. V. 2016a. {``{A Unifying Theory of Exactness of Linear
 Penalty Functions}.''} \emph{Optimization} 65 (6): 1167--1202.
 
-\leavevmode\vadjust pre{\hypertarget{ref-dolgopolik_16b}{}}%
+\bibitem[\citeproctext]{ref-dolgopolik_16b}
 ---------. 2016b. {``{Smooth Exact Penalty Functions: a General
 Approach}.''} \emph{Optimization Letters} 10: 635--48.
 
-\leavevmode\vadjust pre{\hypertarget{ref-dolgopolik_17}{}}%
+\bibitem[\citeproctext]{ref-dolgopolik_17}
 ---------. 2017. {``{A Unifying Theory of Exactness of Linear Penalty
 Functions II: Parametric Penalty Functions}.''} \emph{Optimization} 66
 (10): 1577--1622.
 
-\leavevmode\vadjust pre{\hypertarget{ref-dolgopolik_18}{}}%
+\bibitem[\citeproctext]{ref-dolgopolik_18}
 ---------. n.d. {``{Smooth Exact Penalty Functions: a General
 Approach}.''}
 
-\leavevmode\vadjust pre{\hypertarget{ref-ekman_54}{}}%
+\bibitem[\citeproctext]{ref-ekman_54}
 Ekman, G. 1954. {``{Dimensions of Color Vision}.''} \emph{Journal of
 Psychology} 38: 467--74.
 
-\leavevmode\vadjust pre{\hypertarget{ref-guilford_54}{}}%
+\bibitem[\citeproctext]{ref-guilford_54}
 Guilford, J. P. 1954. \emph{Psychometric Methods}. McGraw-Hill.
 
-\leavevmode\vadjust pre{\hypertarget{ref-mair_groenen_deleeuw_A_22}{}}%
+\bibitem[\citeproctext]{ref-mair_groenen_deleeuw_A_22}
 Mair, P., P. J. F. Groenen, and J. De Leeuw. 2022. {``{More on
 Multidimensional Scaling in R: smacof Version 2}.''} \emph{Journal of
 Statistical Software} 102 (10): 1--47.
+\url{https://www.jstatsoft.org/article/view/v102i10}.
 
-\leavevmode\vadjust pre{\hypertarget{ref-palubeckis_13}{}}%
+\bibitem[\citeproctext]{ref-palubeckis_13}
 Palubeckis, G. 2013. {``{An Improved Exact Algorithm for Least-Squares
 Unidimensional Scaling}.''} \emph{Journal of Applied Mathematics},
 1--15.
 
-\leavevmode\vadjust pre{\hypertarget{ref-revelle_18}{}}%
+\bibitem[\citeproctext]{ref-revelle_18}
 Revelle, W. 2018. \emph{{psych: Procedures for Psychological,
 Psychometric, and Personality Research}}.{ Evanston, Illinois}:{
 Northwestern University}.
 
-\leavevmode\vadjust pre{\hypertarget{ref-rockafellar_70}{}}%
+\bibitem[\citeproctext]{ref-rockafellar_70}
 Rockafellar, R. T. 1970. \emph{Convex Analysis}. Princeton University
 Press.
 
-\leavevmode\vadjust pre{\hypertarget{ref-rothkopf_57}{}}%
+\bibitem[\citeproctext]{ref-rothkopf_57}
 Rothkopf, E. Z. 1957. {``{A Measure of Stimulus Similarity and Errors in
 some Paired-associate Learning}.''} \emph{Journal of Experimental
 Psychology} 53: 94--101.
 
-\leavevmode\vadjust pre{\hypertarget{ref-shepard_62a}{}}%
+\bibitem[\citeproctext]{ref-shepard_62a}
 Shepard, R. N. 1962a. {``{The Analysis of Proximities: Multidimensional
 Scaling with an Unknown Distance Function. I}.''} \emph{Psychometrika}
 27: 125--40.
 
-\leavevmode\vadjust pre{\hypertarget{ref-shepard_62b}{}}%
+\bibitem[\citeproctext]{ref-shepard_62b}
 ---------. 1962b. {``{The Analysis of Proximities: Multidimensional
 Scaling with an Unknown Distance Function. II}.''} \emph{Psychometrika}
 27: 219--46.
 
-\leavevmode\vadjust pre{\hypertarget{ref-zangwill_69}{}}%
+\bibitem[\citeproctext]{ref-zangwill_69}
 Zangwill, W. I. 1969. \emph{{Nonlinear Programming: a Unified
 Approach}}. Englewood-Cliffs, N.J.: Prentice-Hall.
 
